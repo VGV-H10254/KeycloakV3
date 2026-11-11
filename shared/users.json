@@ -1,0 +1,60 @@
+{
+  "list": [
+    {
+      "username": "erika",
+      "password": "test",
+      "verifi_id": "4f7a2c91b6d34e8fa50c1d2e3b4a5c6d",
+      "first_name": "Erika",
+      "last_name": "Mustermann",
+      "email": "erika@example.de"
+    },
+    {
+      "username": "bob",
+      "password": "test",
+      "verifi_id": "9c1e5f7a2b4d6e8f0a1b2c3d4e5f6a7b",
+      "first_name": "Robert",
+      "last_name": "Schmidt",
+      "email": "robert.schmidt@example.de"
+    },
+    {
+      "username": "carol",
+      "password": "test",
+      "verifi_id": "2d4f6a8b0c1e3f5a7b9d0e2f4a6c8b1d",
+      "first_name": "Caroline",
+      "last_name": "Weber",
+      "email": "caroline.weber@example.de"
+    },
+    {
+      "username": "dan",
+      "password": "test",
+      "verifi_id": "5b8e2d71c9a43f60e17d82b5c4a9f361",
+      "first_name": "Dan",
+      "last_name": "Bauer",
+      "email": "dan.bauer@example.de"
+    },
+    {
+      "username": "frank",
+      "password": "test",
+      "verifi_id": "c3f6a95b18d24e70af36c1b8d5e2704a",
+      "first_name": "Frank",
+      "last_name": "Richter",
+      "email": "frank.richter@example.de"
+    },
+    {
+      "username": "gerd",
+      "password": "test",
+      "verifi_id": "e7a14f82b6d93c05f82e6a1d4b7c9350",
+      "first_name": "Gerd",
+      "last_name": "Fischer",
+      "email": "gerd.fischer@example.de"
+    },
+    {
+      "username": "hans",
+      "password": "test",
+      "verifi_id": "9d4c2a7e6b1845f3a0c9d5e27b6f81a4",
+      "first_name": "Hans",
+      "last_name": "Wagner",
+      "email": "hans.wagner@example.de"
+    }
+  ]
+}

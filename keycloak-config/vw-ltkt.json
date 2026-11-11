@@ -1,0 +1,15 @@
+{
+  "clientId": "vw-ltkt",
+  "enabled": true,
+  "protocol": "openid-connect",
+  "publicClient": true,
+  "rootUrl": "https://vw-ltkt.de",
+  "baseUrl": "/",
+  "redirectUris": [
+    "https://vw-ltkt.de",
+    "https://vw-ltkt.de/eid-callback-idp"
+  ],
+  "webOrigins": [
+    "https://vw-ltkt.de"
+  ]
+}

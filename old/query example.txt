@@ -1,0 +1,48 @@
+
+
+
+GET /admin/realms/{realm}/users?username={verifi_id}&exact=true
+
+
+GET /admin/realms/{realm}/users/{id}
+
+returned type:
+application/json
+
+The default search is a full representation, so attributes is included. briefRepresentation=true omits them. Neither call returns credentials.
+{
+  "id": "8f3c1e2a-7b64-4d11-9a0e-6c5b4a3d2e1f",
+  "username": "4f7a2c91b6d34e8fa50c1d2e3b4a5c6d",
+  "enabled": true,
+  "emailVerified": false,
+  "createdTimestamp": 1762100000000,
+  "attributes": {
+    "verifi_id": ["4f7a2c91b6d34e8fa50c1d2e3b4a5c6d"]
+  }
+}
+
+Field 			JSON type 		Meaning
+id			string			The Keycloak sub. 36-character UUID text.
+username		string			Lowercased. In this realm, the stored verifi_id.
+enabled			boolean	 
+emailVerified		boolean	 
+createdTimestamp	number			Epoch milliseconds. Not a string.
+attributes		object, or absent	Map from string to array of strings.
+attributes.verifi_id	array of strings	One element. Not a bare string.
+requiredActions		array of strings	Often present, often empty.
+access			object of booleans	The caller's permissions. Do not store it.
+
+Example:
+The relevant fields are:
+{
+  "id": "8f3c1e2a-7b64-4d11-9a0e-6c5b4a3d2e1f",
+  "username": "4f7a2c91b6d34e8fa50c1d2e3b4a5c6d",
+  "attributes": {
+    "verifi_id": ["4f7a2c91b6d34e8fa50c1d2e3b4a5c6d"]
+  }
+}
+
+id is the sub. The attribute is the Verimi id. Search inside the realm that owns the user: the same person in another Versorgungswerk has a different sub.
+
+On creation, Keycloak returns 201 and a Location header ending in that same id. That is the moment to store sub and verifi_id in the portal. The current script does not do this, so a later lookup is required.
+

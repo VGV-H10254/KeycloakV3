@@ -1,0 +1,15 @@
+{
+  "clientId": "apvn",
+  "enabled": true,
+  "protocol": "openid-connect",
+  "publicClient": true,
+  "rootUrl": "https://apvn.de",
+  "baseUrl": "/",
+  "redirectUris": [
+    "https://apvn.de",
+    "https://apvn.de/eid-callback-idp"
+  ],
+  "webOrigins": [
+    "https://apvn.de"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "clientId": "vw-baev",
+  "enabled": true,
+  "protocol": "openid-connect",
+  "publicClient": true,
+  "rootUrl": "https://vw-baev.de",
+  "baseUrl": "/",
+  "redirectUris": [
+    "https://vw-baev.de",
+    "https://vgv-berliner-aerzte-portal-staging.infopark.io/mein-portal",
+    "https://vw-baev.de/eid-callback-idp"
+  ],
+  "webOrigins": [
+    "https://vw-baev.de"
+  ]
+}

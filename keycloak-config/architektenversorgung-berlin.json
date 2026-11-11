@@ -1,0 +1,15 @@
+{
+  "clientId": "architektenversorgung-berlin",
+  "enabled": true,
+  "protocol": "openid-connect",
+  "publicClient": true,
+  "rootUrl": "https://architektenversorgung-berlin.de",
+  "baseUrl": "/",
+  "redirectUris": [
+    "https://architektenversorgung-berlin.de",
+    "https://architektenversorgung-berlin.de/eid-callback-idp"
+  ],
+  "webOrigins": [
+    "https://architektenversorgung-berlin.de"
+  ]
+}

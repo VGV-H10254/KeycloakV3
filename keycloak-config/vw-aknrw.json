@@ -1,0 +1,15 @@
+{
+  "clientId": "vw-aknrw",
+  "enabled": true,
+  "protocol": "openid-connect",
+  "publicClient": true,
+  "rootUrl": "https://vw-aknrw.de",
+  "baseUrl": "/",
+  "redirectUris": [
+    "https://vw-aknrw.de",
+    "https://vw-aknrw.de/eid-callback-idp"
+  ],
+  "webOrigins": [
+    "https://vw-aknrw.de"
+  ]
+}

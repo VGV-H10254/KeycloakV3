@@ -1,0 +1,15 @@
+{
+  "clientId": "ingenieurversorgung-niedersachsen",
+  "enabled": true,
+  "protocol": "openid-connect",
+  "publicClient": true,
+  "rootUrl": "https://ingenieurversorgung-niedersachsen.de",
+  "baseUrl": "/",
+  "redirectUris": [
+    "https://ingenieurversorgung-niedersachsen.de",
+    "https://ingenieurversorgung-niedersachsen.de/eid-callback-idp"
+  ],
+  "webOrigins": [
+    "https://ingenieurversorgung-niedersachsen.de"
+  ]
+}

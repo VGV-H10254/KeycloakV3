@@ -1,0 +1,51 @@
+# Zentraler Admin-Host: Master-Realm, Realm-Verwaltung, Admin-REST-API.
+#
+# Aus /etc/nginx/templates/admin.conf.template gerendert (envsubst):
+#   ${KC_ADMIN_HOSTNAME}  Hostname des Admin-Hosts
+#   ${KC_ADMIN_PORT}      öffentlicher/Container-Port des Admin-Vhosts (identisch)
+#   ${MGMT_CIDR}          einzige Adresse, die die Konsole erreichen darf (z. B. 87.128.200.94/32)
+#
+# WICHTIG: 'KC_HOSTNAME_ADMIN' im Keycloak-Compose muss auf denselben Host zeigen —
+# sonst lädt die Admin-Console ihre Assets von einem anderen Host.
+# Kein HTTP-Server-Block: ausschließlich HTTPS.
+
+server {
+    listen ${KC_ADMIN_PORT} ssl; # was: listen 443 ssl; # rootless Docker kann keine Ports < 1024 veröffentlichen.
+    http2 on;
+    server_name ${KC_ADMIN_HOSTNAME};
+
+    # Öffentlicher Port für X-Forwarded-Port (kc-proxy.conf). Beim Admin-Vhost sind
+    # Host- und Container-Port identisch, daher kein Mapping nötig.
+    set $kc_public_port ${KC_ADMIN_PORT};
+
+    ssl_certificate     /etc/nginx/certs/${KC_ADMIN_HOSTNAME}/fullchain.pem;
+    ssl_certificate_key /etc/nginx/certs/${KC_ADMIN_HOSTNAME}/privkey.pem;
+
+    # Sicherheits-Header (HSTS, nosniff, X-Frame-Options, Referrer-Policy,
+    # Permissions-Policy) werden EINMAL auf http-Ebene gesetzt:
+    # snippets/security-headers.conf, eingebunden in nginx.conf.
+    # Bewusst KEIN eigenes add_header hier — es würde alle geerbten Header
+    # dieses Vhosts verwerfen (nginx-Vererbung: alles oder nichts).
+
+    # --------------------------------------------------------------------------
+    # ZUGRIFFSKONTROLLE: NICHT hier, sondern in der Provider-Firewall auf
+    # Port ${KC_ADMIN_PORT}. Grund: Rootless Docker liefert nginx fuer JEDEN
+    # Client dieselbe Quell-IP (172.30.0.1) - allow/deny wuerde alle Clients
+    # gleich behandeln (entweder alle sperren oder alle durchlassen).
+    #
+    # Benoetigte Regeln (Beispiel):
+    #   TCP ${KC_ADMIN_PORT}  <- <MGMT_CIDR>   # Admin-Konsole
+    #   TCP ${KC_ADMIN_PORT}  <- <EIP>/32      # AWS-Lambda-Egress (statische IP!)
+    #   TCP ${KC_ADMIN_PORT}  <- DENY ALL
+    #
+    # Details, Secret-Ablage und Client 'lambda-admin': lambda-admin-client.md
+    # --------------------------------------------------------------------------
+    # Old: allow ${MGMT_CIDR}; / deny all; -- bewusst deaktiviert (siehe oben).
+
+    client_max_body_size 10m;
+
+    location / {
+        proxy_pass http://keycloak;
+        include /etc/nginx/snippets/kc-proxy.conf;
+    }
+}

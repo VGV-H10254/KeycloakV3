@@ -1,0 +1,15 @@
+{
+  "clientId": "vwaek-hamburg",
+  "enabled": true,
+  "protocol": "openid-connect",
+  "publicClient": true,
+  "rootUrl": "https://vwaek.hamburg",
+  "baseUrl": "/",
+  "redirectUris": [
+    "https://vwaek.hamburg",
+    "https://vwaek.hamburg/eid-callback-idp"
+  ],
+  "webOrigins": [
+    "https://vwaek.hamburg"
+  ]
+}

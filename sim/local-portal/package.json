@@ -1,0 +1,11 @@
+{
+  "name": "vw-baev-local-portal",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@aws-sdk/client-lambda": "^3.716.0"
+  }
+}

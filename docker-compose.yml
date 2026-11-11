@@ -1,0 +1,307 @@
+# Keycloak-Only-Stack (ohne Portal und ohne IDV-Anbieter)
+#
+# Verwendung, wenn das Portal und der IDV-Anbieter (z. B. Verimi) bereits
+# extern betrieben werden und dieser Server nur Keycloak + Postgres + nginx
+# bereitstellen soll. Das externe Portal kontaktiert Keycloak über die
+# öffentlichen Mandanten-URLs (https://<mandant>).
+#
+# Erststart (einmalig, legt den Bootstrap-Admin und den Setup-Client an):
+#   node infra/nginx/generate-nginx.mjs
+#   docker compose --env-file .env.prod --profile bootstrap run --rm keycloak-bootstrap
+#   docker compose --env-file .env.prod up -d
+#   docker compose --env-file .env.prod --profile setup run --rm keycloak-setup
+#
+# Danach: den Bootstrap-Admin in Keycloak deaktivieren (bzw. löschen), dann
+# ./secrets/admin_password löschen und 'admin_password' aus den Secret-Listen
+# (keycloak-base, keycloak-bootstrap) entfernen. Der Normalbetrieb braucht ihn nicht mehr.
+# Ausnahme: Ein neuer Mandant mit portalImpersonation braucht den Bootstrap erneut
+# (siehe Option C als offener Punkt).
+#
+# Benötigt: .env.prod (ohne IDV_*/IDV_HOST), Zertifikate, tenants.conf im
+# Keycloak-Only-Modus (siehe oben).
+
+name: keycloak-prod
+
+# Secrets: je eine Datei unter ./secrets/ (erzeugt von scripts/create-secrets.sh).
+# Sie werden im Container unter /run/secrets/<name> eingebunden — NICHT als
+# Umgebungsvariable. Die Dateien sind in .gitignore und dürfen nie committet werden.
+secrets:
+  db_password:
+    file: ./secrets/db_password
+  admin_password:
+    file: ./secrets/admin_password
+  setup_client_secret:
+    file: ./secrets/setup_client_secret
+  admin_client_secret:
+    file: ./secrets/admin_client_secret
+
+x-keycloak-base: &keycloak-base
+  build:
+    context: ./keycloak
+    dockerfile: Dockerfile
+  command: ["start", "--optimized"]
+  restart: unless-stopped
+  stop_grace_period: 45s
+  secrets: [db_password, admin_password]
+  depends_on:
+    postgres:
+      condition: service_healthy
+  healthcheck:
+    test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000 && echo -e 'GET /health/ready HTTP/1.0\\r\\nHost: localhost\\r\\n\\r\\n' >&3 && grep -q '\"status\": *\"UP\"' <&3"]
+    interval: 10s
+    timeout: 5s
+    retries: 30
+    start_period: 40s
+  deploy:
+    resources:
+      limits:
+        memory: 2G
+  volumes:
+    - keycloak-data:/opt/keycloak/data
+    - ./keycloak/certs:/opt/keycloak/conf/certs:ro
+  networks:
+    - kc
+
+x-keycloak-env: &keycloak-env
+  KC_DB: postgres
+  KC_DB_URL: jdbc:postgresql://postgres:5432/${KC_DB_NAME:?KC_DB_NAME fehlt}?sslmode=${KC_DB_SSLMODE:-verify-full}&sslrootcert=/opt/keycloak/conf/certs/pg-ca.crt
+  KC_DB_USERNAME: ${KC_DB_USER:?KC_DB_USER fehlt}
+  # KC_DB_PASSWORD kommt aus /run/secrets/db_password (secrets-entrypoint.sh)
+  KC_DB_POOL_INITIAL_SIZE: "10"
+  KC_DB_POOL_MIN_SIZE: "10"
+  KC_DB_POOL_MAX_SIZE: "50"
+  # Öffentlicher Host (Mandanten-Logins, Issuer). Muss NICHT der Admin-Host sein.
+  KC_HOSTNAME: https://${KC_PUBLIC_HOSTNAME:?KC_PUBLIC_HOSTNAME fehlt}:${KC_PUBLIC_PORT:-8443}
+  KC_HOSTNAME_ADMIN: https://${KC_ADMIN_HOSTNAME:?KC_ADMIN_HOSTNAME fehlt}:${KC_ADMIN_PORT:-8444}
+  KC_HOSTNAME_STRICT: "true"
+  KC_HTTP_ENABLED: "true"
+  KC_PROXY_HEADERS: forwarded
+  KC_PROXY_TRUSTED_ADDRESSES: ${KC_PROXY_TRUSTED_ADDRESSES:?KC_PROXY_TRUSTED_ADDRESSES fehlt}
+  KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+  KC_CACHE_EMBEDDED_CLUSTER_NAME: ${KC_CLUSTER_NAME:-kc-prod}
+  KC_CACHE_EMBEDDED_MTLS_ENABLED: "true"
+  KC_HEALTH_ENABLED: "true"
+  KC_METRICS_ENABLED: "true"
+  KC_HTTP_MAX_QUEUED_CONNECTIONS: "100"
+  KC_SERVER_ASYNC_BOOTSTRAP: "false"
+  KC_SHUTDOWN_DELAY: "16s"
+  KC_SHUTDOWN_TIMEOUT: "30s"
+  KC_LOG_LEVEL: info
+  KC_LOG_CONSOLE_OUTPUT: json
+  KC_LOG_CONSOLE_JSON_FORMAT: ecs
+  KC_HTTP_ACCESS_LOG_ENABLED: "true"
+  JAVA_OPTS_APPEND: "-Djava.net.preferIPv4Stack=true"
+  KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_ADMIN_USER:?KC_ADMIN_USER fehlt}
+  # KC_BOOTSTRAP_ADMIN_PASSWORD kommt aus /run/secrets/admin_password (nur Erststart)
+
+services:
+  postgres-certs-init:
+    image: postgres:17-alpine
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        set -e
+        pg_gid="$$(id -g postgres)"
+        cp /src/postgres.crt /dst/postgres.crt
+        cp /src/postgres.key /dst/postgres.key
+        chown "0:$${pg_gid}" /dst/postgres.key
+        chmod 0640 /dst/postgres.key
+        chown 0:0 /dst/postgres.crt
+        chmod 0644 /dst/postgres.crt
+        echo "[certs-init] postgres.key → root:$${pg_gid} 0640, postgres.crt → root:root 0644"
+    volumes:
+      - ./infra/pg/certs:/src:ro
+      - pg-certs:/dst
+    restart: "no"
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${KC_DB_NAME:?KC_DB_NAME fehlt}
+      POSTGRES_USER: ${KC_DB_USER:?KC_DB_USER fehlt}
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    secrets: [db_password]
+    command:
+      - postgres
+      - -c
+      - ssl=on
+      - -c
+      - ssl_cert_file=/etc/postgresql/certs/postgres.crt
+      - -c
+      - ssl_key_file=/etc/postgresql/certs/postgres.key
+      - -c
+      - password_encryption=scram-sha-256
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - pg-certs:/etc/postgresql/certs:ro
+    depends_on:
+      postgres-certs-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${KC_DB_USER} -d ${KC_DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - kc
+
+  # Feste Adressen: nginx (infra/nginx/nginx.conf) spricht die Knoten per IP an,
+  # damit der Proxy nicht beim Start auf DNS-Auflösung angewiesen ist.
+  keycloak-1:
+    <<: *keycloak-base
+    hostname: kc-1
+    networks:
+      kc:
+        ipv4_address: 172.30.0.4
+    environment:
+      <<: *keycloak-env
+      KC_CACHE_EMBEDDED_NODE_NAME: kc-1
+
+  keycloak-2:
+    <<: *keycloak-base
+    hostname: kc-2
+    networks:
+      kc:
+        ipv4_address: 172.30.0.3
+    environment:
+      <<: *keycloak-env
+      KC_CACHE_EMBEDDED_NODE_NAME: kc-2
+
+  # Realm-/Client-Sync. Läuft NICHT bei 'up -d', sondern explizit:
+  #   docker compose --env-file .env.prod --profile setup run --rm keycloak-setup
+  # Nur Setup-Client (client_credentials), KEIN Admin-Passwort.
+  # Kein ./shared-Mount: Test-User (users.json) gehören nicht in Prod.
+  keycloak-setup:
+    profiles: ["setup"]
+    image: node:24-alpine
+    working_dir: /app/keycloak
+    secrets: [setup_client_secret, admin_client_secret]
+    environment:
+      KC_URL: http://keycloak-1:8080
+      KC_SETUP_CLIENT_ID: ${KC_SETUP_CLIENT_ID:-realm-setup}
+      KC_SETUP_CLIENT_SECRET_FILE: /run/secrets/setup_client_secret
+      KC_ADMIN_CLIENT_SECRET_FILE: /run/secrets/admin_client_secret
+      KC_ADMIN_HOSTNAME: ${KC_ADMIN_HOSTNAME:?KC_ADMIN_HOSTNAME fehlt}
+      KC_PUBLIC_PORT: ${KC_PUBLIC_PORT:-8443}
+      KC_ADMIN_PORT: ${KC_ADMIN_PORT:-8444}
+      TENANT_ENV: prod
+      KC_ENABLE_MOCK_TENANTS: ${KC_ENABLE_MOCK_TENANTS:-0}
+      # Secrets fuer externe Service-Accounts (Client 'lambda-admin'): EIN Secret
+      # pro Mandant unter ./secrets/lambda. Bewusst ein eigenes Verzeichnis -
+      # dieser Container sieht so keine DB-/Admin-Passwoerter.
+      KC_LAMBDA_SECRET_DIR: /run/lambda-secrets
+    volumes:
+      - ./keycloak:/app/keycloak:ro
+      - ./keycloak-config:/app/keycloak-config:ro
+      - ./secrets/lambda:/run/lambda-secrets:ro
+    command: node setup-realms.mjs
+    restart: "no"
+    depends_on:
+      keycloak-1:
+        condition: service_healthy
+    networks:
+      - kc
+
+  # Einmaliger Erststart: legt Setup-Client und Rollen an. Nur im Profil 'bootstrap'
+  # gestartet, nie per 'up -d'. Die Admin-Zugangsdaten existieren nur in diesem Container.
+  keycloak-bootstrap:
+    profiles: ["bootstrap"]
+    image: node:24-alpine
+    working_dir: /app/keycloak
+    secrets: [admin_password, setup_client_secret, admin_client_secret]
+    environment:
+      KC_URL: http://keycloak-1:8080
+      KC_ADMIN_USER: ${KC_ADMIN_USER:?KC_ADMIN_USER fehlt}
+      KC_ADMIN_PASS_FILE: /run/secrets/admin_password
+      KC_SETUP_CLIENT_ID: ${KC_SETUP_CLIENT_ID:-realm-setup}
+      KC_SETUP_CLIENT_SECRET_FILE: /run/secrets/setup_client_secret
+      KC_ADMIN_CLIENT_SECRET_FILE: /run/secrets/admin_client_secret
+      KC_ADMIN_HOSTNAME: ${KC_ADMIN_HOSTNAME:?KC_ADMIN_HOSTNAME fehlt}
+      KC_PUBLIC_PORT: ${KC_PUBLIC_PORT:-8443}
+      KC_ADMIN_PORT: ${KC_ADMIN_PORT:-8444}
+      TENANT_ENV: prod
+      KC_ENABLE_MOCK_TENANTS: ${KC_ENABLE_MOCK_TENANTS:-0}
+      # Secrets fuer externe Service-Accounts (Client 'lambda-admin'): EIN Secret
+      # pro Mandant unter ./secrets/lambda. Bewusst ein eigenes Verzeichnis -
+      # dieser Container sieht so keine DB-/Admin-Passwoerter.
+      KC_LAMBDA_SECRET_DIR: /run/lambda-secrets
+    volumes:
+      - ./keycloak:/app/keycloak:ro
+      - ./keycloak-config:/app/keycloak-config:ro
+      - ./secrets/lambda:/run/lambda-secrets:ro
+    command: node setup-realms.mjs
+    restart: "no"
+    depends_on:
+      keycloak-1:
+        condition: service_healthy
+    networks:
+      - kc
+
+  proxy:
+    image: nginx:1.27-alpine
+    ports:
+      # Nur HTTPS; rootless Docker kann keine Ports < 1024 veröffentlichen.
+      - "${KC_PUBLIC_PORT:-8443}:443"
+      # Host- und Container-Port müssen identisch sein: der Admin-Vhost lauscht im
+      # Container auf KC_ADMIN_PORT (infra/nginx/templates/admin.conf.template).
+      # "8444:443" würde ins Leere zeigen — 443 bedient nur die Mandanten.
+      - "${KC_ADMIN_PORT:-8444}:${KC_ADMIN_PORT:-8444}"
+    environment:
+      KC_ENV: ${KC_ENV:?KC_ENV fehlt — bitte KC_ENV=prod in die Env-Datei setzen}
+      KC_ADMIN_HOSTNAME: ${KC_ADMIN_HOSTNAME:?KC_ADMIN_HOSTNAME fehlt}
+      KC_ADMIN_PORT: ${KC_ADMIN_PORT:-8444}
+      KC_PUBLIC_PORT: ${KC_PUBLIC_PORT:-8443}
+      MGMT_CIDR: ${MGMT_CIDR:?MGMT_CIDR fehlt (z. B. 87.128.200.94/32)}
+    volumes:
+      - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./infra/nginx/snippets:/etc/nginx/snippets:ro
+      - ./infra/nginx/templates:/etc/nginx/templates:ro
+      - ./infra/nginx/generated:/etc/nginx/generated:ro
+      - ./infra/nginx/certs:/etc/nginx/certs:ro
+    command: ["nginx", "-g", "daemon off;"]
+    depends_on:
+      keycloak-1:
+        condition: service_healthy
+      keycloak-2:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      kc:
+        # Feste Adresse: Keycloak vertraut Forwarding-Headern nur von dieser IP
+        # (KC_PROXY_TRUSTED_ADDRESSES=172.30.0.10/32).
+        ipv4_address: 172.30.0.10
+
+  # Konfigurationsprüfung ohne den laufenden Proxy anzufassen. Nutzt exakt dieselben
+  # Mounts wie 'proxy', damit Pfadfehler ausgeschlossen sind.
+  #   docker compose --env-file .env.prod --profile verify run --rm nginx-verify
+  nginx-verify:
+    profiles: ["verify"]
+    image: nginx:1.27-alpine
+    environment:
+      KC_ENV: ${KC_ENV:?KC_ENV fehlt — bitte KC_ENV=prod in die Env-Datei setzen}
+      KC_ADMIN_HOSTNAME: ${KC_ADMIN_HOSTNAME:?KC_ADMIN_HOSTNAME fehlt}
+      KC_ADMIN_PORT: ${KC_ADMIN_PORT:-8444}
+      KC_PUBLIC_PORT: ${KC_PUBLIC_PORT:-8443}
+      MGMT_CIDR: ${MGMT_CIDR:?MGMT_CIDR fehlt (z. B. 87.128.200.94/32)}
+    volumes:
+      - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./infra/nginx/snippets:/etc/nginx/snippets:ro
+      - ./infra/nginx/templates:/etc/nginx/templates:ro
+      - ./infra/nginx/generated:/etc/nginx/generated:ro
+      - ./infra/nginx/certs:/etc/nginx/certs:ro
+    command: ["nginx", "-t"]
+    restart: "no"
+
+networks:
+  kc:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
+
+volumes:
+  keycloak-data:
+  postgres-data:
+  pg-certs:

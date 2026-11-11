@@ -1,0 +1,15 @@
+{
+  "clientId": "vw-ltkmv",
+  "enabled": true,
+  "protocol": "openid-connect",
+  "publicClient": true,
+  "rootUrl": "https://vw-ltkmv.de",
+  "baseUrl": "/",
+  "redirectUris": [
+    "https://vw-ltkmv.de",
+    "https://vw-ltkmv.de/eid-callback-idp"
+  ],
+  "webOrigins": [
+    "https://vw-ltkmv.de"
+  ]
+}

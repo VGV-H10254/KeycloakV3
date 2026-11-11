@@ -1,0 +1,117 @@
+:root {
+  --sued-text: #2b2140;
+  --sued-muted: #6f6390;
+  --sued-border: #e4dcf5;
+  --sued-accent: #7b3ff2;
+  --sued-accent-dark: #5f27d6;
+  --sued-sun: #f2921d;
+  --sued-focus: #f2921d;
+  --sued-error: #b3245c;
+  --sued-page-bg: #faf6ff;
+  --sued-card: #ffffff;
+}
+
+html.login-pf,
+.login-pf body {
+  font-family: Georgia, "Times New Roman", "Segoe UI", serif;
+}
+
+.login-pf body {
+  background: radial-gradient(1100px 560px at 80% -10%, #fff4e6 0%, var(--sued-page-bg) 60%) fixed !important;
+  color: var(--sued-text);
+}
+
+#kc-header {
+  color: var(--sued-text);
+}
+
+#kc-header-wrapper {
+  font-size: 1.4rem !important;
+  text-transform: none !important;
+  letter-spacing: 0.01em !important;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--sued-text) !important;
+  padding: 2.25rem 1rem 0.5rem !important;
+}
+
+#kc-header-wrapper::after {
+  content: "Prototyp";
+  display: inline-block;
+  margin-left: 0.6rem;
+  padding: 0.05rem 0.6rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  font-family: system-ui, "Segoe UI", sans-serif;
+  vertical-align: middle;
+  letter-spacing: 0;
+  color: var(--sued-muted);
+  background: #fff;
+  border: 1px solid var(--sued-border);
+  border-radius: 999px;
+}
+
+.card-pf {
+  background: var(--sued-card) !important;
+  border-top: 4px solid var(--sued-sun) !important;
+  border-radius: 22px !important;
+  box-shadow: 0 4px 10px rgba(90, 40, 140, 0.10), 0 16px 40px rgba(90, 40, 140, 0.10) !important;
+  padding: 2rem 2.25rem 1.75rem !important;
+  max-width: 30rem !important;
+}
+
+h1#kc-page-title {
+  font-size: 1.5rem !important;
+  font-weight: 700;
+  margin-top: 0 !important;
+  color: var(--sued-text) !important;
+}
+
+.pf-c-button.pf-m-primary,
+input[type="submit"].pf-m-primary,
+input[type="button"].pf-m-primary,
+button.pf-m-primary {
+  background-color: var(--sued-accent) !important;
+  border-color: var(--sued-accent) !important;
+  color: #fff !important;
+  border-radius: 999px !important;
+  padding-left: 1.6rem !important;
+  padding-right: 1.6rem !important;
+  font-weight: 600 !important;
+}
+
+.pf-c-button.pf-m-primary:hover,
+input[type="submit"].pf-m-primary:hover,
+input[type="button"].pf-m-primary:hover,
+button.pf-m-primary:hover {
+  background-color: var(--sued-accent-dark) !important;
+  border-color: var(--sued-accent-dark) !important;
+}
+
+.pf-c-form-control {
+  border: 1px solid var(--sued-border) !important;
+  border-radius: 12px !important;
+  background: #fbf9ff !important;
+  color: var(--sued-text) !important;
+}
+
+.login-pf a {
+  color: var(--sued-accent);
+}
+
+.login-pf a:hover {
+  color: var(--sued-accent-dark) !important;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+.pf-c-button:focus-visible {
+  outline: 3px solid var(--sued-focus) !important;
+  outline-offset: 2px !important;
+}
+
+.pf-c-alert.pf-m-danger,
+.alert-error {
+  border-left: 4px solid var(--sued-error) !important;
+}

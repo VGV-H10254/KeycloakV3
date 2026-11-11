@@ -1,0 +1,31 @@
+# --- Secrets: never commit real values ---
+.env
+.env.*
+!.env.example
+!.env.prod.example
+secrets/
+**/*secret*
+**/*password*.txt
+
+# --- Keys and certificates: private material stays out of git ---
+*.key
+*.pem
+*.p12
+*.pfx
+*.srl
+**/privkey*.pem
+**/ca.key
+**/certs/
+!**/certs/README.md
+
+# --- Local runtime data ---
+keycloak/certs/
+infra/pg/certs/
+infra/nginx/certs/
+infra/nginx/generated/
+
+# --- Editor/OS noise ---
+.DS_Store
+Thumbs.db
+*.log
+node_modules/

@@ -1,0 +1,15 @@
+{
+  "clientId": "apothekerversorgung-berlin",
+  "enabled": true,
+  "protocol": "openid-connect",
+  "publicClient": true,
+  "rootUrl": "https://apothekerversorgung-berlin.de",
+  "baseUrl": "/",
+  "redirectUris": [
+    "https://apothekerversorgung-berlin.de",
+    "https://apothekerversorgung-berlin.de/eid-callback-idp"
+  ],
+  "webOrigins": [
+    "https://apothekerversorgung-berlin.de"
+  ]
+}

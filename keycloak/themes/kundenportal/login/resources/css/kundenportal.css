@@ -1,0 +1,109 @@
+:root {
+  --kp-text: #1a1a1a;
+  --kp-muted: #5f6368;
+  --kp-border: #dadce0;
+  --kp-accent: #0b57d0;
+  --kp-accent-dark: #0842a0;
+  --kp-focus: #f9ab00;
+  --kp-error: #a11515;
+  --kp-page-bg: #eef1f6;
+}
+
+html.login-pf,
+.login-pf body {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.login-pf body {
+  background: radial-gradient(1200px 600px at 50% -10%, #ffffff 0%, var(--kp-page-bg) 60%) fixed !important;
+  color: var(--kp-text);
+}
+
+#kc-header {
+  color: var(--kp-text);
+}
+
+#kc-header-wrapper {
+  font-size: 1.35rem !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--kp-text) !important;
+  padding: 2.25rem 1rem 0.5rem !important;
+}
+
+#kc-header-wrapper::after {
+  content: "Prototyp";
+  display: inline-block;
+  margin-left: 0.6rem;
+  padding: 0.05rem 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 500;
+  vertical-align: middle;
+  color: var(--kp-muted);
+  background: #fff;
+  border: 1px solid var(--kp-border);
+  border-radius: 999px;
+}
+
+.card-pf {
+  background: #fff !important;
+  border-top: 4px solid var(--kp-accent) !important;
+  border-radius: 0 0 8px 8px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.10), 0 8px 24px rgba(0, 0, 0, 0.06) !important;
+  padding: 1.75rem 2rem 1.5rem !important;
+  max-width: 30rem !important;
+}
+
+h1#kc-page-title {
+  font-size: 1.35rem !important;
+  font-weight: 600;
+  margin-top: 0 !important;
+}
+
+.pf-c-button.pf-m-primary,
+input[type="submit"].pf-m-primary,
+input[type="button"].pf-m-primary,
+button.pf-m-primary {
+  background-color: var(--kp-accent) !important;
+  border-color: var(--kp-accent) !important;
+  color: #fff !important;
+  border-radius: 4px !important;
+}
+
+.pf-c-button.pf-m-primary:hover,
+input[type="submit"].pf-m-primary:hover,
+input[type="button"].pf-m-primary:hover,
+button.pf-m-primary:hover {
+  background-color: var(--kp-accent-dark) !important;
+  border-color: var(--kp-accent-dark) !important;
+}
+
+.pf-c-form-control {
+  border: 1px solid #666 !important;
+  border-radius: 4px !important;
+  background: #f8f9fa !important;
+  color: var(--kp-text) !important;
+}
+
+.login-pf a {
+  color: var(--kp-accent);
+}
+
+.login-pf a:hover {
+  color: var(--kp-accent-dark) !important;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+.pf-c-button:focus-visible {
+  outline: 3px solid var(--kp-focus) !important;
+  outline-offset: 2px !important;
+}
+
+.pf-c-alert.pf-m-danger,
+.alert-error {
+  border-left: 4px solid var(--kp-error) !important;
+}
