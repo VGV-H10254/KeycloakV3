@@ -39,6 +39,10 @@ x-keycloak-base: &keycloak-base
   build:
     context: ./keycloak
     dockerfile: Dockerfile
+    # Ein gemeinsames, versioniertes Image für keycloak-1 UND keycloak-2 statt
+    # zweier automatisch benannter Images. Beim Version-Bump synchron halten:
+    # beide FROM-Zeilen im keycloak/Dockerfile + dieser Name + security-measures.md.
+    name: keycloak-custom:26.7.5
   command: ["start", "--optimized"]
   restart: unless-stopped
   stop_grace_period: 45s

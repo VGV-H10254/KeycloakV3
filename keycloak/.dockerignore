@@ -1,0 +1,10 @@
+# Der Build braucht nur: Dockerfile, themes/ und secrets-entrypoint.sh
+# (siehe COPY-Zeilen im Dockerfile). Alles andere bleibt außerhalb des
+# Build-Kontexts — insbesondere certs/ (DB-CA) und tenants.json.
+#
+# WICHTIG: .dockerignore wirkt NUR auf den Build-Kontext. Die Volume-Mounts
+# in keycloak-setup/keycloak-bootstrap (./keycloak als ro-Mount) bleiben
+# unberührt — tenants.json und die *.mjs-Skripte laufen dort weiter.
+certs/
+tenants.json
+*.mjs
