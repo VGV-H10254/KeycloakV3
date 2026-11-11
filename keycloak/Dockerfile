@@ -14,7 +14,7 @@
 # Betroffen sind hier: features-disabled, feature-stateless, log-mdc-enabled.
 # Sie stehen deshalb UNTEN in diesem Block und werden in docker-compose.yml
 # NICHT mehr gesetzt.
-FROM quay.io/keycloak/keycloak:26.7.5 AS builder
+FROM quay.io/keycloak/keycloak:26.8.2 AS builder
 
 ENV KC_DB=postgres \
     KC_CACHE=ispn \
@@ -30,7 +30,7 @@ ENV KC_DB=postgres \
 WORKDIR /opt/keycloak
 RUN /opt/keycloak/bin/kc.sh build
 
-FROM quay.io/keycloak/keycloak:26.7.5
+FROM quay.io/keycloak/keycloak:26.8.2
 
 COPY --from=builder /opt/keycloak/ /opt/keycloak/
 COPY --chown=keycloak:keycloak themes/ /opt/keycloak/themes/

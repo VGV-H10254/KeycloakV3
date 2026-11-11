@@ -2,7 +2,10 @@ import { base64url } from "rfc4648";
 
 export async function registerByWebAuthn(input) {
     if (!window.PublicKeyCredential) {
-        returnFailure(input.errmsg);
+        // 26.8.x: fixer Fehlermarker statt input.errmsg — der Server
+        // (WebAuthnRegister.java) mappt "WebAuthnUnsupportedBrowser" auf die
+        // lokalisierte Meldung (Upstream-Änderung 26.7.5 -> 26.8.2 nachgezogen).
+        returnFailure("WebAuthnUnsupportedBrowser");
         return;
     }
 

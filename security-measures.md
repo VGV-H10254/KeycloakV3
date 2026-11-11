@@ -168,7 +168,7 @@ The high-privilege `impersonation` role remains only for the passkey-registratio
 - Services restart automatically with `unless-stopped`.
 - Graceful Keycloak shutdown is configured.
 - Keycloak uses an optimised image build.
-- Keycloak image version `26.7.5` is pinned (both `FROM` lines in `keycloak/Dockerfile` and `build.name` in `docker-compose.yml` — always bumped together).
+- Keycloak image version `26.8.2` is pinned (both `FROM` lines in `keycloak/Dockerfile` and `build.name` in `docker-compose.yml` — always bumped together).
 - Bootstrap and setup jobs use explicit Compose profiles.
 - Production does not mount development test users.
 - Nginx configuration is generated to reduce configuration drift.

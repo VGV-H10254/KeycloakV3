@@ -1,3 +1,8 @@
 # Shell-Skripte und Entrypoints müssen LF haben; CRLF bricht sie im Container.
 *.sh text eol=lf
 keycloak/secrets-entrypoint.sh text eol=lf
+
+# Fork des Keycloak-base-Theme-JS: LF erzwingen, damit der M2-Diff gegen den
+# Upstream (LF) bei jedem Upgrade sauber lesbar bleibt — autocrlf=true würde
+# die Datei bei jedem Checkout nach CRLF wandeln und den Diff verrauschen.
+keycloak/themes/portal-base/login/resources/js/webauthnRegister.js text eol=lf
